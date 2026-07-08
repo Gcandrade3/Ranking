@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2af2d" />
+    <meta
+      name="description"
+      content="Reconluz Premia — pontos, ranking e metas da equipe comercial."
+    />
+    <title>Reconluz Premia</title>
+    <script>
+      // Aplica o tema salvo (ou a preferência do sistema) antes do primeiro paint,
+      // pra não piscar claro-depois-escuro (ou vice-versa) ao carregar a página.
+      ;(function () {
+        var stored = localStorage.getItem('theme')
+        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (dark) document.documentElement.classList.add('dark')
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
+
+  /* Reconluz brand — laranja solar (extraído da logo oficial, #F2AF2D) */
+  --color-brand-50: #fff8eb;
+  --color-brand-100: #feecc8;
+  --color-brand-200: #fdd996;
+  --color-brand-300: #fbc260;
+  --color-brand-400: #f6b131;
+  --color-brand-500: #f2af2d;
+  --color-brand-600: #e5910b;
+  --color-brand-700: #c16d06;
+  --color-brand-800: #9a4f09;
+  --color-brand-900: #7b390a;
+  --color-brand-950: #441b04;
+
+  /* Verde de apoio — sustentabilidade / estados positivos (meta batida, validado) */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #052e16;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --background: #fffdf9;
+  --foreground: #241a0e;
+  --card: #ffffff;
+  --card-foreground: #241a0e;
+  --popover: #ffffff;
+  --popover-foreground: #241a0e;
+
+  --primary: var(--color-brand-500);
+  --primary-foreground: #2b1a04;
+
+  --secondary: var(--color-brand-100);
+  --secondary-foreground: var(--color-brand-900);
+
+  --muted: #f4efe7;
+  --muted-foreground: #7a6c5c;
+
+  --accent: var(--color-brand-100);
+  --accent-foreground: var(--color-brand-900);
+
+  --success: var(--color-success-600);
+  --success-foreground: #ffffff;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #ece3d6;
+  --input: #ece3d6;
+  --ring: var(--color-brand-500);
+
+  /* Paleta categórica validada (dataviz skill) contra o fundo #fffdf9 —
+     CVD-safe (ΔE min 21.6); aqua/amarelo ficam abaixo de 3:1 de contraste,
+     por isso os gráficos sempre usam rótulo direto + legenda, nunca só cor. */
+  --chart-1: #2a78d6;
+  --chart-2: #1baf7a;
+  --chart-3: #eda100;
+  --chart-4: #eb6834;
+  --chart-5: #4a3aa7;
+}
+
+.dark {
+  --background: #17130d;
+  --foreground: #f7f1e6;
+  --card: #211a10;
+  --card-foreground: #f7f1e6;
+  --popover: #211a10;
+  --popover-foreground: #f7f1e6;
+
+  --primary: var(--color-brand-400);
+  --primary-foreground: #1c1000;
+
+  --secondary: #332512;
+  --secondary-foreground: var(--color-brand-100);
+
+  --muted: #2a2116;
+  --muted-foreground: #b3a58e;
+
+  --accent: #332512;
+  --accent-foreground: var(--color-brand-100);
+
+  --success: var(--color-success-500);
+  --success-foreground: #06210f;
+
+  --destructive: #f87171;
+  --destructive-foreground: #2a0a0a;
+
+  --border: rgba(247, 241, 230, 0.1);
+  --input: rgba(247, 241, 230, 0.14);
+  --ring: var(--color-brand-400);
+
+  /* Paleta categórica validada contra o fundo #17130d (WARN só na separação
+     CVD do par laranja/amarelo — mitigado com rótulo direto). */
+  --chart-1: #3987e5;
+  --chart-2: #199e70;
+  --chart-3: #c98500;
+  --chart-4: #d95926;
+  --chart-5: #9085e9;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
