@@ -4,9 +4,10 @@ export type Theme = 'light' | 'dark'
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light'
+  // Claro é o padrão sempre — só entra no escuro se a pessoa escolheu isso
+  // explicitamente antes (não seguimos mais a preferência do sistema).
   const stored = localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark') return stored
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return stored === 'dark' ? 'dark' : 'light'
 }
 
 export function useTheme() {

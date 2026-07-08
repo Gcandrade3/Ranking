@@ -12,12 +12,12 @@
     />
     <title>Reconluz Premia</title>
     <script>
-      // Aplica o tema salvo (ou a preferência do sistema) antes do primeiro paint,
-      // pra não piscar claro-depois-escuro (ou vice-versa) ao carregar a página.
+      // Claro é o padrão sempre — só aplica escuro antes do primeiro paint se a
+      // pessoa já tiver escolhido isso explicitamente (evita flash claro→escuro).
       ;(function () {
-        var stored = localStorage.getItem('theme')
-        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
-        if (dark) document.documentElement.classList.add('dark')
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark')
+        }
       })()
     </script>
   </head>
