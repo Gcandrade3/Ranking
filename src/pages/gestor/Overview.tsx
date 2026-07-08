@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardCheck, Target, TrendingUp, Users } from 'lucide-react'
+import { ClipboardList, Target, TrendingUp, Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,7 +22,7 @@ const MESES = [
 ]
 
 interface Stats {
-  pendentes: number
+  registrosMes: number
   vendedorasAtivas: number
   pontosMes: number
   metaDescricao: string | null
@@ -39,8 +39,12 @@ export default function GestorOverview() {
     const mes = now.getMonth() + 1
 
     async function load() {
-      const [pendentesRes, vendedorasRes, rankingRes, metaRes] = await Promise.all([
-        supabase.from('registros').select('id', { count: 'exact', head: true }).eq('status', 'pendente'),
+      const [registrosMesRes, vendedorasRes, rankingRes, metaRes] = await Promise.all([
+        supabase
+          .from('registros')
+          .select('id', { count: 'exact', head: true })
+          .eq('ano_apuracao', ano)
+          .eq('mes_apuracao', mes),
         supabase.from('vendedoras').select('id', { count: 'exact', head: true }).eq('ativo', true),
         supabase.from('ranking_mensal').select('pontos_total').eq('ano', ano).eq('mes', mes),
         supabase.from('metas_mensais').select('id, descricao_meta').eq('ano', ano).eq('mes', mes).single(),
@@ -57,7 +61,7 @@ export default function GestorOverview() {
       }
 
       setStats({
-        pendentes: pendentesRes.count ?? 0,
+        registrosMes: registrosMesRes.count ?? 0,
         vendedorasAtivas: vendedorasRes.count ?? 0,
         pontosMes: (rankingRes.data ?? []).reduce((acc, r) => acc + r.pontos_total, 0),
         metaDescricao: metaRes.data?.descricao_meta ?? null,
@@ -85,12 +89,14 @@ export default function GestorOverview() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Link to="/admin/validacao">
+          <Link to="/admin/registros">
             <Card className="h-full transition-colors hover:bg-accent">
               <CardContent className="flex flex-col gap-1 px-4 py-3">
-                <ClipboardCheck className="size-5 text-brand-600 dark:text-brand-400" />
-                <span className="text-2xl font-semibold">{stats.pendentes}</span>
-                <span className="text-xs text-muted-foreground">Pendentes de validação</span>
+                <ClipboardList className="size-5 text-brand-600 dark:text-brand-400" />
+                <span className="text-2xl font-semibold">{stats.registrosMes}</span>
+                <span className="text-xs text-muted-foreground">
+                  Registros em {MESES[now.getMonth()]}
+                </span>
               </CardContent>
             </Card>
           </Link>

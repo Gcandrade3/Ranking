@@ -215,8 +215,11 @@ begin
 end;
 $$;
 
+-- "insert or" também: o gestor lança a ação já como 'validado' direto (sem
+-- passar por pendente), e OLD.status é null nesse caso — a condição
+-- `old.status is distinct from 'validado'` já cobre isso corretamente.
 create trigger set_apuracao_on_validate_trigger
-  before update of status on public.registros
+  before insert or update of status on public.registros
   for each row execute function public.set_apuracao_on_validate();
 
 -- =========================================================================
@@ -260,36 +263,24 @@ create policy profiles_update on public.profiles
   using (id = auth.uid() or public.is_gestor())
   with check (id = auth.uid() or public.is_gestor());
 
--- registros: vendedora só vê/lança/edita os próprios; edita só enquanto pendente.
--- Gestor vê e administra tudo (inclui validar/rejeitar, que muda o status).
+-- registros: só o gestor lança/edita/exclui (ele é quem opera o sistema).
+-- Vendedora só enxerga os próprios registros (extrato/ranking), nunca escreve.
 create policy registros_select on public.registros
   for select to authenticated
   using (vendedora_id = public.current_vendedora_id() or public.is_gestor());
 
 create policy registros_insert on public.registros
   for insert to authenticated
-  with check (
-    public.is_gestor()
-    or (vendedora_id = public.current_vendedora_id() and status = 'pendente')
-  );
+  with check (public.is_gestor());
 
 create policy registros_update on public.registros
   for update to authenticated
-  using (
-    public.is_gestor()
-    or (vendedora_id = public.current_vendedora_id() and status = 'pendente')
-  )
-  with check (
-    public.is_gestor()
-    or (vendedora_id = public.current_vendedora_id() and status = 'pendente')
-  );
+  using (public.is_gestor())
+  with check (public.is_gestor());
 
 create policy registros_delete on public.registros
   for delete to authenticated
-  using (
-    public.is_gestor()
-    or (vendedora_id = public.current_vendedora_id() and status = 'pendente')
-  );
+  using (public.is_gestor());
 
 -- metas_mensais: leitura liberada; escrita só gestor.
 create policy metas_mensais_select on public.metas_mensais

@@ -1,42 +1,24 @@
-import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import { useMemo } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useAcoesCatalogo } from '@/hooks/useAcoesCatalogo'
 import { useMeusRegistros } from '@/hooks/useRegistros'
-import { RegistroFormDialog } from '@/components/registros/RegistroFormDialog'
 import { StatusBadge } from '@/components/registros/StatusBadge'
 import { ResumoMensal } from '@/components/vendedora/ResumoMensal'
 import { VendedoraDoMes } from '@/components/gamification/VendedoraDoMes'
 import { Badges } from '@/components/gamification/Badges'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function VendedoraDashboard() {
   const { profile } = useAuth()
   const { acoes } = useAcoesCatalogo()
-  const { registros, loading, createRegistro } = useMeusRegistros(profile?.vendedora_id)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const { registros, loading } = useMeusRegistros(profile?.vendedora_id)
 
-  const acoesAtivas = useMemo(() => acoes.filter((a) => a.ativo), [acoes])
   const acaoPorId = useMemo(() => new Map(acoes.map((a) => [a.id, a])), [acoes])
-
-  async function handleSubmit(input: Parameters<typeof createRegistro>[0]) {
-    const result = await createRegistro(input)
-    if (!result.error) toast.success('Ação registrada! Aguardando validação do gestor.')
-    return result
-  }
 
   return (
     <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Olá, {profile?.nome ?? 'vendedora'}</h1>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus className="size-4" />
-          Registrar
-        </Button>
-      </div>
+      <h1 className="mb-4 text-2xl font-semibold">Olá, {profile?.nome ?? 'vendedora'}</h1>
 
       <VendedoraDoMes />
       <ResumoMensal vendedoraId={profile?.vendedora_id} />
@@ -46,7 +28,7 @@ export default function VendedoraDashboard() {
         <Badges vendedoraId={profile?.vendedora_id} />
       </div>
 
-      <h2 className="mb-2 text-sm font-medium text-muted-foreground">Meus registros</h2>
+      <h2 className="mb-2 text-sm font-medium text-muted-foreground">Meus pontos vieram de</h2>
 
       {loading ? (
         <div className="flex flex-col gap-2">
@@ -81,18 +63,12 @@ export default function VendedoraDashboard() {
           })}
           {registros.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Nenhum registro ainda. Toque em "Registrar" para lançar sua primeira ação.
+              Nenhum ponto lançado ainda. Assim que o gestor registrar suas ações, elas aparecem
+              aqui.
             </p>
           )}
         </div>
       )}
-
-      <RegistroFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        acoes={acoesAtivas}
-        onSubmit={handleSubmit}
-      />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 const links = [
   { to: '/admin', label: 'Visão geral', end: true },
-  { to: '/admin/validacao', label: 'Validação' },
+  { to: '/admin/registros', label: 'Registros' },
   { to: '/admin/vendedoras', label: 'Vendedoras' },
   { to: '/admin/catalogo', label: 'Catálogo' },
   { to: '/admin/metas', label: 'Metas' },

@@ -18,26 +18,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { AcaoCatalogo } from '@/types/database'
-import type { RegistroInput } from '@/hooks/useRegistros'
+import type { AcaoCatalogo, Vendedora } from '@/types/database'
+import type { NovoRegistroGestorInput } from '@/hooks/useRegistrosGestor'
 
-interface RegistroFormDialogProps {
+interface GestorRegistroFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  vendedoras: Vendedora[]
   acoes: AcaoCatalogo[]
-  onSubmit: (input: RegistroInput) => Promise<{ error: string | null }>
+  onSubmit: (input: NovoRegistroGestorInput) => Promise<{ error: string | null }>
 }
 
 function today() {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function RegistroFormDialog({
+export function GestorRegistroFormDialog({
   open,
   onOpenChange,
+  vendedoras,
   acoes,
   onSubmit,
-}: RegistroFormDialogProps) {
+}: GestorRegistroFormDialogProps) {
+  const [vendedoraId, setVendedoraId] = useState('')
   const [acaoId, setAcaoId] = useState('')
   const [quantidade, setQuantidade] = useState('1')
   const [cliente, setCliente] = useState('')
@@ -49,6 +52,7 @@ export function RegistroFormDialog({
 
   useEffect(() => {
     if (open) {
+      setVendedoraId('')
       setAcaoId('')
       setQuantidade('1')
       setCliente('')
@@ -67,12 +71,17 @@ export function RegistroFormDialog({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (!vendedoraId) {
+      setError('Escolha uma vendedora.')
+      return
+    }
     if (!acaoId) {
       setError('Escolha uma ação.')
       return
     }
     setSubmitting(true)
     const { error } = await onSubmit({
+      vendedora_id: vendedoraId,
       acao_id: acaoId,
       quantidade: Number(quantidade),
       cliente,
@@ -91,18 +100,31 @@ export function RegistroFormDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Registrar ação</DialogTitle>
-            <DialogDescription>
-              Fica pendente até o gestor validar — só então entra no ranking.
-            </DialogDescription>
+            <DialogDescription>Já entra validado e conta pro ranking na hora.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="vendedora">Vendedora</Label>
+              <Select value={vendedoraId} onValueChange={(value) => setVendedoraId(value ?? '')}>
+                <SelectTrigger id="vendedora" className="w-full">
+                  <SelectValue>
+                    {(value: string) => vendedoras.find((v) => v.id === value)?.nome ?? 'Escolha uma vendedora'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {vendedoras.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="acao">Ação</Label>
               <Select value={acaoId} onValueChange={(value) => setAcaoId(value ?? '')}>
                 <SelectTrigger id="acao" className="w-full">
-                  {/* SelectValue não deriva o rótulo do texto filho do SelectItem — só
-                      resolve por uma prop `items` declarativa que não usamos aqui, então
-                      mapeamos manualmente o id selecionado de volta para o texto. */}
                   <SelectValue>
                     {(value: string) => {
                       const acao = acoes.find((a) => a.id === value)
@@ -178,7 +200,7 @@ export function RegistroFormDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Enviando…' : 'Registrar'}
+              {submitting ? 'Registrando…' : 'Registrar'}
             </Button>
           </DialogFooter>
         </form>

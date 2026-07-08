@@ -10,7 +10,7 @@ import GestorOverview from '@/pages/gestor/Overview'
 import GestorVendedoras from '@/pages/gestor/Vendedoras'
 import GestorCatalogo from '@/pages/gestor/Catalogo'
 import GestorMetas from '@/pages/gestor/Metas'
-import GestorValidacao from '@/pages/gestor/Validacao'
+import GestorRegistros from '@/pages/gestor/Registros'
 import GestorRelatorios from '@/pages/gestor/Relatorios'
 import RankingPage from '@/pages/Ranking'
 
@@ -58,7 +58,7 @@ export default function App() {
         }
       >
         <Route index element={<GestorOverview />} />
-        <Route path="validacao" element={<GestorValidacao />} />
+        <Route path="registros" element={<GestorRegistros />} />
         <Route path="vendedoras" element={<GestorVendedoras />} />
         <Route path="catalogo" element={<GestorCatalogo />} />
         <Route path="metas" element={<GestorMetas />} />
