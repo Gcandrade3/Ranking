@@ -73,6 +73,31 @@ export function useRegistrosGestor() {
     return { error: null }
   }
 
+  async function atualizarRegistro(id: string, input: NovoRegistroGestorInput) {
+    const update: Partial<Registro> = {
+      vendedora_id: input.vendedora_id,
+      acao_id: input.acao_id,
+      quantidade: input.quantidade,
+      cliente: input.cliente || null,
+      observacao: input.observacao || null,
+      data_ocorrencia: input.data_ocorrencia,
+    }
+
+    if (input.comprovante) {
+      const path = `${input.vendedora_id}/${Date.now()}-${input.comprovante.name}`
+      const { error: uploadError } = await supabase.storage
+        .from('comprovantes')
+        .upload(path, input.comprovante)
+      if (uploadError) return { error: uploadError.message }
+      update.comprovante_url = path
+    }
+
+    const { error } = await supabase.from('registros').update(update).eq('id', id)
+    if (error) return { error: error.message }
+    await refresh()
+    return { error: null }
+  }
+
   async function excluir(id: string) {
     const { error } = await supabase.from('registros').delete().eq('id', id)
     if (error) return { error: error.message }
@@ -80,5 +105,5 @@ export function useRegistrosGestor() {
     return { error: null }
   }
 
-  return { registros, loading, error, refresh, criarRegistro, excluir }
+  return { registros, loading, error, refresh, criarRegistro, atualizarRegistro, excluir }
 }

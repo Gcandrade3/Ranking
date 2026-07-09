@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Trash2, Paperclip } from 'lucide-react'
+import { Pencil, Plus, Trash2, Paperclip } from 'lucide-react'
 import { useRegistrosGestor } from '@/hooks/useRegistrosGestor'
 import { useVendedoras } from '@/hooks/useVendedoras'
 import { useAcoesCatalogo } from '@/hooks/useAcoesCatalogo'
@@ -19,17 +19,39 @@ import {
 import { supabase } from '@/lib/supabase'
 import { comemorarVendaFechada } from '@/lib/confetti'
 import { corPontos } from '@/lib/utils'
+import type { Registro } from '@/types/database'
 
 export default function GestorRegistros() {
-  const { registros, loading, error, criarRegistro, excluir } = useRegistrosGestor()
+  const { registros, loading, error, criarRegistro, atualizarRegistro, excluir } =
+    useRegistrosGestor()
   const { vendedoras } = useVendedoras()
   const { acoes } = useAcoesCatalogo()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editando, setEditando] = useState<Registro | null>(null)
   const [filtroVendedora, setFiltroVendedora] = useState('todas')
 
   const vendedoraPorId = useMemo(() => new Map(vendedoras.map((v) => [v.id, v])), [vendedoras])
   const acaoPorId = useMemo(() => new Map(acoes.map((a) => [a.id, a])), [acoes])
-  const vendedorasAtivas = useMemo(() => vendedoras.filter((v) => v.ativo), [vendedoras])
+
+  // Inclui a vendedora/ação do registro em edição mesmo se ela tiver sido
+  // desativada depois — senão o campo fica em branco ao abrir pra editar.
+  const vendedorasParaDialog = useMemo(() => {
+    const ativas = vendedoras.filter((v) => v.ativo)
+    if (editando && !ativas.some((v) => v.id === editando.vendedora_id)) {
+      const atual = vendedoraPorId.get(editando.vendedora_id)
+      if (atual) return [...ativas, atual]
+    }
+    return ativas
+  }, [vendedoras, editando, vendedoraPorId])
+
+  const acoesParaDialog = useMemo(() => {
+    const ativas = acoes.filter((a) => a.ativo)
+    if (editando && !ativas.some((a) => a.id === editando.acao_id)) {
+      const atual = acaoPorId.get(editando.acao_id)
+      if (atual) return [...ativas, atual]
+    }
+    return ativas
+  }, [acoes, editando, acaoPorId])
 
   const registrosFiltrados = useMemo(
     () =>
@@ -39,11 +61,21 @@ export default function GestorRegistros() {
     [registros, filtroVendedora],
   )
 
+  function abrirCriar() {
+    setEditando(null)
+    setDialogOpen(true)
+  }
+
+  function abrirEditar(registro: Registro) {
+    setEditando(registro)
+    setDialogOpen(true)
+  }
+
   async function handleSubmit(input: Parameters<typeof criarRegistro>[0]) {
-    const result = await criarRegistro(input)
+    const result = editando ? await atualizarRegistro(editando.id, input) : await criarRegistro(input)
     if (!result.error) {
-      toast.success('Ação registrada e validada!')
-      if (acaoPorId.get(input.acao_id)?.descricao.startsWith('Venda Fechada')) {
+      toast.success(editando ? 'Registro atualizado!' : 'Ação registrada e validada!')
+      if (!editando && acaoPorId.get(input.acao_id)?.descricao.startsWith('Venda Fechada')) {
         comemorarVendaFechada()
       }
     }
@@ -69,7 +101,7 @@ export default function GestorRegistros() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Registros</h1>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" onClick={abrirCriar}>
           <Plus className="size-4" />
           Registrar
         </Button>
@@ -152,15 +184,21 @@ export default function GestorRegistros() {
                     ) : (
                       <span />
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleExcluir(registro.id)}
-                    >
-                      <Trash2 className="size-4" />
-                      Excluir
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => abrirEditar(registro)}>
+                        <Pencil className="size-4" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleExcluir(registro.id)}
+                      >
+                        <Trash2 className="size-4" />
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -177,8 +215,9 @@ export default function GestorRegistros() {
       <GestorRegistroFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        vendedoras={vendedorasAtivas}
-        acoes={acoes.filter((a) => a.ativo)}
+        vendedoras={vendedorasParaDialog}
+        acoes={acoesParaDialog}
+        registro={editando}
         onSubmit={handleSubmit}
       />
     </div>

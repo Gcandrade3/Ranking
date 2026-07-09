@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select'
 import { AcaoCombobox } from '@/components/registros/AcaoCombobox'
 import { cn } from '@/lib/utils'
-import type { AcaoCatalogo, Vendedora } from '@/types/database'
+import type { AcaoCatalogo, Registro, Vendedora } from '@/types/database'
 import type { NovoRegistroGestorInput } from '@/hooks/useRegistrosGestor'
 
 interface GestorRegistroFormDialogProps {
@@ -28,6 +28,7 @@ interface GestorRegistroFormDialogProps {
   onOpenChange: (open: boolean) => void
   vendedoras: Vendedora[]
   acoes: AcaoCatalogo[]
+  registro?: Registro | null
   onSubmit: (input: NovoRegistroGestorInput) => Promise<{ error: string | null }>
 }
 
@@ -40,6 +41,7 @@ export function GestorRegistroFormDialog({
   onOpenChange,
   vendedoras,
   acoes,
+  registro,
   onSubmit,
 }: GestorRegistroFormDialogProps) {
   const [vendedoraId, setVendedoraId] = useState('')
@@ -54,16 +56,16 @@ export function GestorRegistroFormDialog({
 
   useEffect(() => {
     if (open) {
-      setVendedoraId('')
-      setAcaoId('')
-      setQuantidade('1')
-      setCliente('')
-      setObservacao('')
-      setDataOcorrencia(today())
+      setVendedoraId(registro?.vendedora_id ?? '')
+      setAcaoId(registro?.acao_id ?? '')
+      setQuantidade(registro ? String(registro.quantidade) : '1')
+      setCliente(registro?.cliente ?? '')
+      setObservacao(registro?.observacao ?? '')
+      setDataOcorrencia(registro?.data_ocorrencia ?? today())
       setComprovante(null)
       setError(null)
     }
-  }, [open])
+  }, [open, registro])
 
   const acaoSelecionada = acoes.find((a) => a.id === acaoId)
   const pontosPrevistos = useMemo(() => {
@@ -101,8 +103,12 @@ export function GestorRegistroFormDialog({
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Registrar ação</DialogTitle>
-            <DialogDescription>Já entra validado e conta pro ranking na hora.</DialogDescription>
+            <DialogTitle>{registro ? 'Editar registro' : 'Registrar ação'}</DialogTitle>
+            <DialogDescription>
+              {registro
+                ? 'Os pontos recalculam na hora se você mudar a ação ou a quantidade.'
+                : 'Já entra validado e conta pro ranking na hora.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-2">
@@ -182,7 +188,9 @@ export function GestorRegistroFormDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="comprovante">Comprovante (opcional)</Label>
+              <Label htmlFor="comprovante">
+                Comprovante {registro?.comprovante_url ? '(já tem um — escolha outro pra trocar)' : '(opcional)'}
+              </Label>
               <Input
                 id="comprovante"
                 type="file"
@@ -195,7 +203,7 @@ export function GestorRegistroFormDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Registrando…' : 'Registrar'}
+              {submitting ? 'Salvando…' : registro ? 'Salvar' : 'Registrar'}
             </Button>
           </DialogFooter>
         </form>
