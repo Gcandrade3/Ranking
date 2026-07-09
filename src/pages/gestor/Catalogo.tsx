@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { corPontos } from '@/lib/utils'
 import type { AcaoCatalogo } from '@/types/database'
 
 export default function GestorCatalogo() {
@@ -87,7 +88,7 @@ export default function GestorCatalogo() {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="font-semibold text-brand-600 dark:text-brand-400">
+                  <TableCell className={`font-semibold ${corPontos(acao.pontos)}`}>
                     {acao.pontos}
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

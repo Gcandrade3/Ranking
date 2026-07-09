@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { AcaoCombobox } from '@/components/registros/AcaoCombobox'
+import { cn } from '@/lib/utils'
 import type { AcaoCatalogo, Vendedora } from '@/types/database'
 import type { NovoRegistroGestorInput } from '@/hooks/useRegistrosGestor'
 
@@ -123,23 +125,7 @@ export function GestorRegistroFormDialog({
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="acao">Ação</Label>
-              <Select value={acaoId} onValueChange={(value) => setAcaoId(value ?? '')}>
-                <SelectTrigger id="acao" className="w-full">
-                  <SelectValue>
-                    {(value: string) => {
-                      const acao = acoes.find((a) => a.id === value)
-                      return acao ? `${acao.descricao} · ${acao.pontos} pts` : 'Escolha uma ação'
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {acoes.map((acao) => (
-                    <SelectItem key={acao.id} value={acao.id}>
-                      {acao.descricao} · {acao.pontos} pts
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AcaoCombobox acoes={acoes} value={acaoId} onChange={setAcaoId} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -167,8 +153,17 @@ export function GestorRegistroFormDialog({
             </div>
 
             {acaoSelecionada && (
-              <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm font-medium text-brand-800 dark:bg-brand-950 dark:text-brand-200">
-                Vale {pontosPrevistos} pontos
+              <p
+                className={cn(
+                  'rounded-lg px-3 py-2 text-sm font-medium',
+                  pontosPrevistos < 0
+                    ? 'bg-destructive/10 text-destructive'
+                    : 'bg-brand-50 text-brand-800 dark:bg-brand-950 dark:text-brand-200',
+                )}
+              >
+                {pontosPrevistos < 0
+                  ? `Desconta ${Math.abs(pontosPrevistos)} pontos`
+                  : `Vale ${pontosPrevistos} pontos`}
               </p>
             )}
 

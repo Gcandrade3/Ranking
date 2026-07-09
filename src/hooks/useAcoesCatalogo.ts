@@ -19,7 +19,7 @@ export function useAcoesCatalogo() {
     const { data, error } = await supabase
       .from('acoes_catalogo')
       .select('*')
-      .order('ordem', { ascending: true })
+      .order('descricao', { ascending: true })
     if (error) setError(error.message)
     else {
       setAcoes(data)

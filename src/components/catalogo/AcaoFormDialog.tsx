@@ -24,7 +24,6 @@ export function AcaoFormDialog({ open, onOpenChange, acao, onSubmit }: AcaoFormD
   const [descricao, setDescricao] = useState('')
   const [pontos, setPontos] = useState('')
   const [categoria, setCategoria] = useState('')
-  const [ordem, setOrdem] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -33,7 +32,6 @@ export function AcaoFormDialog({ open, onOpenChange, acao, onSubmit }: AcaoFormD
       setDescricao(acao?.descricao ?? '')
       setPontos(acao ? String(acao.pontos) : '')
       setCategoria(acao?.categoria ?? '')
-      setOrdem(acao ? String(acao.ordem) : '')
       setError(null)
     }
   }, [open, acao])
@@ -45,7 +43,6 @@ export function AcaoFormDialog({ open, onOpenChange, acao, onSubmit }: AcaoFormD
       descricao,
       pontos: Number(pontos),
       categoria: categoria || null,
-      ordem: ordem === '' ? undefined : Number(ordem),
     })
     setSubmitting(false)
     if (error) setError(error)
@@ -59,7 +56,8 @@ export function AcaoFormDialog({ open, onOpenChange, acao, onSubmit }: AcaoFormD
           <DialogHeader>
             <DialogTitle>{acao ? 'Editar ação' : 'Nova ação'}</DialogTitle>
             <DialogDescription>
-              Pontos já lançados não mudam retroativamente se você editar o valor aqui.
+              Pontos já lançados não mudam retroativamente se você editar o valor aqui. Use um
+              valor negativo pra ações que descontam pontos (ex.: cancelamento).
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -72,28 +70,15 @@ export function AcaoFormDialog({ open, onOpenChange, acao, onSubmit }: AcaoFormD
                 onChange={(e) => setDescricao(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="pontos">Pontos</Label>
-                <Input
-                  id="pontos"
-                  type="number"
-                  min={1}
-                  required
-                  value={pontos}
-                  onChange={(e) => setPontos(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="ordem">Ordem</Label>
-                <Input
-                  id="ordem"
-                  type="number"
-                  min={0}
-                  value={ordem}
-                  onChange={(e) => setOrdem(e.target.value)}
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="pontos">Pontos</Label>
+              <Input
+                id="pontos"
+                type="number"
+                required
+                value={pontos}
+                onChange={(e) => setPontos(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="categoria">Categoria</Label>

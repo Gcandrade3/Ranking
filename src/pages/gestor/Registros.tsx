@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { comemorarVendaFechada } from '@/lib/confetti'
+import { corPontos } from '@/lib/utils'
 
 export default function GestorRegistros() {
   const { registros, loading, error, criarRegistro, excluir } = useRegistrosGestor()
@@ -130,7 +131,9 @@ export default function GestorRegistros() {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="whitespace-nowrap font-semibold text-brand-600 dark:text-brand-400">
+                      <span
+                        className={`whitespace-nowrap font-semibold ${corPontos(registro.pontos_calculados)}`}
+                      >
                         {registro.pontos_calculados} pts
                       </span>
                       <StatusBadge status={registro.status} />

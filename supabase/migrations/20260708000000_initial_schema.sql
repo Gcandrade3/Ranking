@@ -18,7 +18,7 @@ create table public.vendedoras (
 create table public.acoes_catalogo (
   id uuid primary key default gen_random_uuid(),
   descricao text not null,
-  pontos integer not null check (pontos > 0),
+  pontos integer not null check (pontos <> 0),
   categoria text,
   ativo boolean not null default true,
   ordem integer not null default 0,

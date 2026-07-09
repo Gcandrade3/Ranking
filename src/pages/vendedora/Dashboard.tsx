@@ -8,6 +8,7 @@ import { VendedoraDoMes } from '@/components/gamification/VendedoraDoMes'
 import { Badges } from '@/components/gamification/Badges'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
+import { corPontos } from '@/lib/utils'
 
 export default function VendedoraDashboard() {
   const { profile } = useAuth()
@@ -52,7 +53,7 @@ export default function VendedoraDashboard() {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="font-semibold text-brand-600 dark:text-brand-400">
+                    <span className={`font-semibold ${corPontos(registro.pontos_calculados)}`}>
                       {registro.pontos_calculados} pts
                     </span>
                     <StatusBadge status={registro.status} />
