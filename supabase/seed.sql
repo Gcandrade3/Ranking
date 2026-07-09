@@ -14,7 +14,14 @@ insert into public.acoes_catalogo (descricao, pontos, categoria, ordem) values
   ('Venda Fechada por indicação', 180, 'venda', 10),
   ('Venda kit ≥ 2k', 180, 'venda', 11),
   ('Venda CNPJ', 180, 'venda', 12),
-  ('Venda kit ≥ 4k', 250, 'venda', 13);
+  ('Venda kit ≥ 4k', 250, 'venda', 13),
+  ('1 dia sem métricas', -50, 'penalidade', 14),
+  ('Lead sem cadência', -50, 'penalidade', 15),
+  ('1 dia sem proposta', -50, 'penalidade', 16),
+  ('1 semana sem chamada de vídeo', -100, 'penalidade', 17),
+  ('1 semana sem proposta de indicação', -100, 'penalidade', 18),
+  ('15 dias sem visita', -100, 'penalidade', 19),
+  ('15 dias sem venda', -100, 'penalidade', 20);
 
 -- E-mails placeholder — o gestor deve atualizar para o e-mail real de cada vendedora
 -- (precisa bater com o e-mail usado no cadastro do Supabase Auth para o profile linkar).
