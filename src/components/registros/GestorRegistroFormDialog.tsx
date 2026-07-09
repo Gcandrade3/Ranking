@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ interface GestorRegistroFormDialogProps {
   acoes: AcaoCatalogo[]
   registro?: Registro | null
   onSubmit: (input: NovoRegistroGestorInput) => Promise<{ error: string | null }>
+  onDirtyChange?: (dirty: boolean) => void
 }
 
 function today() {
@@ -43,6 +44,7 @@ export function GestorRegistroFormDialog({
   acoes,
   registro,
   onSubmit,
+  onDirtyChange,
 }: GestorRegistroFormDialogProps) {
   const [vendedoraId, setVendedoraId] = useState('')
   const [acaoId, setAcaoId] = useState('')
@@ -53,6 +55,7 @@ export function GestorRegistroFormDialog({
   const [comprovante, setComprovante] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const acabouDeAbrir = useRef(false)
 
   useEffect(() => {
     if (open) {
@@ -64,8 +67,19 @@ export function GestorRegistroFormDialog({
       setDataOcorrencia(registro?.data_ocorrencia ?? today())
       setComprovante(null)
       setError(null)
+      acabouDeAbrir.current = true
     }
   }, [open, registro])
+
+  // Só marca "sujo" (pra avisar antes de fechar a aba) em mudanças reais do
+  // usuário — não na primeira renderização depois de abrir/pré-preencher.
+  useEffect(() => {
+    if (acabouDeAbrir.current) {
+      acabouDeAbrir.current = false
+      return
+    }
+    onDirtyChange?.(true)
+  }, [vendedoraId, acaoId, quantidade, cliente, observacao, dataOcorrencia, comprovante, onDirtyChange])
 
   const acaoSelecionada = acoes.find((a) => a.id === acaoId)
   const pontosPrevistos = useMemo(() => {

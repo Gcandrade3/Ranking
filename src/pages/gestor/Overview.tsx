@@ -1,19 +1,14 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 import { ChevronRight, ClipboardList, Plus, Target, TrendingUp, Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useRanking } from '@/hooks/useRanking'
-import { useRegistrosGestor } from '@/hooks/useRegistrosGestor'
-import { useVendedoras } from '@/hooks/useVendedoras'
-import { useAcoesCatalogo } from '@/hooks/useAcoesCatalogo'
+import { useRegistroDialog } from '@/components/registros/RegistroDialogProvider'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { VendedoraDoMes } from '@/components/gamification/VendedoraDoMes'
 import { Podio } from '@/components/ranking/Podio'
-import { GestorRegistroFormDialog } from '@/components/registros/GestorRegistroFormDialog'
-import { comemorarVendaFechada } from '@/lib/confetti'
 
 const MESES = [
   'Janeiro',
@@ -41,26 +36,10 @@ interface Stats {
 export default function GestorOverview() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
 
   const now = new Date()
   const { mensal, loading: loadingRanking } = useRanking(now.getFullYear(), now.getMonth() + 1)
-  const { criarRegistro } = useRegistrosGestor()
-  const { vendedoras } = useVendedoras()
-  const { acoes } = useAcoesCatalogo()
-  const vendedorasAtivas = useMemo(() => vendedoras.filter((v) => v.ativo), [vendedoras])
-  const acaoPorId = useMemo(() => new Map(acoes.map((a) => [a.id, a])), [acoes])
-
-  async function handleSubmit(input: Parameters<typeof criarRegistro>[0]) {
-    const result = await criarRegistro(input)
-    if (!result.error) {
-      toast.success('Ação registrada e validada!')
-      if (acaoPorId.get(input.acao_id)?.descricao.startsWith('Venda Fechada')) {
-        comemorarVendaFechada()
-      }
-    }
-    return result
-  }
+  const { abrirNovoRegistro } = useRegistroDialog()
 
   const instanceId = useId()
 
@@ -124,7 +103,7 @@ export default function GestorOverview() {
     <div className="p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Visão geral</h1>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" onClick={abrirNovoRegistro}>
           <Plus className="size-4" />
           Registrar
         </Button>
@@ -214,14 +193,6 @@ export default function GestorOverview() {
           </p>
         )}
       </div>
-
-      <GestorRegistroFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        vendedoras={vendedorasAtivas}
-        acoes={acoes.filter((a) => a.ativo)}
-        onSubmit={handleSubmit}
-      />
     </div>
   )
 }
