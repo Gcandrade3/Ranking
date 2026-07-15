@@ -4,22 +4,16 @@
 // Domínio @reconluz.local propositalmente diferente do e-mail real das
 // vendedoras (@reconluz.com.br) para não colidir com o vínculo automático
 // de vendedora_id feito pelo trigger handle_new_user().
+import { normalizarNome } from '@/lib/utils'
+
 const ALIASES: Record<string, string> = {
   cris: 'cris@reconluz.local',
   gabriela: 'gabriela@reconluz.local',
   rafaela: 'rafaela@reconluz.local',
 }
 
-function normalizar(valor: string) {
-  return valor
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-}
-
 export function resolverEmailDeLogin(identificador: string): string | null {
   const valor = identificador.trim()
   if (valor.includes('@')) return valor
-  return ALIASES[normalizar(valor)] ?? null
+  return ALIASES[normalizarNome(valor)] ?? null
 }

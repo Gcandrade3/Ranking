@@ -10,7 +10,7 @@ export interface RankingLinha {
   pontos_total: number
 }
 
-async function fetchMensal(ano: number, mes: number): Promise<RankingLinha[]> {
+export async function fetchMensal(ano: number, mes: number): Promise<RankingLinha[]> {
   const [{ data: vendedoras, error: vendedorasError }, { data: ranking, error: rankingError }] =
     await Promise.all([
       supabase.from('vendedoras').select('id, nome, avatar_url').eq('ativo', true),
@@ -21,7 +21,7 @@ async function fetchMensal(ano: number, mes: number): Promise<RankingLinha[]> {
   return mergeComVendedoras(vendedoras, ranking)
 }
 
-async function fetchAnual(ano: number): Promise<RankingLinha[]> {
+export async function fetchAnual(ano: number): Promise<RankingLinha[]> {
   const [{ data: vendedoras, error: vendedorasError }, { data: ranking, error: rankingError }] =
     await Promise.all([
       supabase.from('vendedoras').select('id, nome, avatar_url').eq('ativo', true),
@@ -95,4 +95,67 @@ export function useRanking(ano: number, mes: number) {
   }, [refresh, instanceId])
 
   return { mensal, anual, loading, error, refresh }
+}
+
+// Busca o "período anterior" equivalente (mês anterior, ou ano anterior) só
+// pra servir de base de comparação — evolução de posição/pontos. Não assina
+// realtime: é uma referência histórica que raramente muda depois de fechada.
+export function useRankingAnterior(periodo: 'mes' | 'ano', ano: number, mes: number) {
+  const [linhas, setLinhas] = useState<RankingLinha[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    const promise =
+      periodo === 'mes'
+        ? fetchMensal(mes === 1 ? ano - 1 : ano, mes === 1 ? 12 : mes - 1)
+        : fetchAnual(ano - 1)
+    promise
+      .then((data) => {
+        if (active) setLinhas(data)
+      })
+      .catch(() => {
+        if (active) setLinhas([])
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [periodo, ano, mes])
+
+  return { linhas, loading }
+}
+
+export interface RankingLinhaComEvolucao extends RankingLinha {
+  posicao: number
+  posicaoAnterior: number
+  deltaPosicao: number
+  deltaPontos: number
+}
+
+// Combina o ranking atual com o anterior pra saber quem subiu/desceu e quanto
+// ganhou desde o período passado. Vendedoras sem histórico anterior (ex.:
+// primeiro mês) entram com a mesma posição/pontos atuais, ou seja, delta 0.
+export function comEvolucao(
+  linhas: RankingLinha[],
+  anteriores: RankingLinha[],
+): RankingLinhaComEvolucao[] {
+  const posicaoAnteriorPorId = new Map(anteriores.map((l, i) => [l.vendedora_id, i + 1]))
+  const pontosAnteriorPorId = new Map(anteriores.map((l) => [l.vendedora_id, l.pontos_total]))
+
+  return linhas.map((linha, i) => {
+    const posicao = i + 1
+    const posicaoAnterior = posicaoAnteriorPorId.get(linha.vendedora_id) ?? posicao
+    const pontosAnterior = pontosAnteriorPorId.get(linha.vendedora_id) ?? linha.pontos_total
+    return {
+      ...linha,
+      posicao,
+      posicaoAnterior,
+      deltaPosicao: posicaoAnterior - posicao,
+      deltaPontos: linha.pontos_total - pontosAnterior,
+    }
+  })
 }

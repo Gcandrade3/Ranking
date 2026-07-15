@@ -1,12 +1,26 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRanking, type RankingLinha } from '@/hooks/useRanking'
+import { useRanking, useRankingAnterior, comEvolucao, type RankingLinhaComEvolucao } from '@/hooks/useRanking'
 import { Podio } from '@/components/ranking/Podio'
+import { SummaryCards } from '@/components/ranking/SummaryCards'
+import { RankingTable } from '@/components/ranking/RankingTable'
+import { EvolutionChart } from '@/components/ranking/EvolutionChart'
+import { Insights } from '@/components/ranking/Insights'
+import { ComparisonBar } from '@/components/ranking/ComparisonBar'
 import { ExtratoDialog } from '@/components/ranking/ExtratoDialog'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAuth } from '@/lib/auth'
+import { normalizarNome } from '@/lib/utils'
 
 const MESES = [
   'Janeiro',
@@ -30,97 +44,120 @@ export default function RankingPage() {
   const [periodo, setPeriodo] = useState<'mes' | 'ano'>('mes')
   const { profile } = useAuth()
   const { mensal, anual, loading, error } = useRanking(ano, mes)
-  const [selecionada, setSelecionada] = useState<RankingLinha | null>(null)
+  const { linhas: anteriores, loading: loadingAnterior } = useRankingAnterior(periodo, ano, mes)
+  const [selecionada, setSelecionada] = useState<RankingLinhaComEvolucao | null>(null)
 
-  const linhas = periodo === 'mes' ? mensal : anual
+  const linhasBase = periodo === 'mes' ? mensal : anual
+  const linhas = useMemo(() => comEvolucao(linhasBase, anteriores), [linhasBase, anteriores])
+
+  const meuVendedoraId = useMemo(() => {
+    if (profile?.vendedora_id) return profile.vendedora_id
+    if (!profile?.nome) return null
+    const alvo = normalizarNome(profile.nome)
+    return linhas.find((l) => normalizarNome(l.nome) === alvo)?.vendedora_id ?? null
+  }, [profile, linhas])
+
+  const minha = linhas.find((l) => l.vendedora_id === meuVendedoraId)
+  const lider = linhas[0]
+  const mostrarComparacao = minha && lider && minha.posicao !== 1
+
   const top3 = linhas.slice(0, 3)
-  const resto = linhas.slice(3)
-
-  function mudarMes(delta: number) {
-    let novoMes = mes + delta
-    let novoAno = ano
-    if (novoMes < 1) {
-      novoMes = 12
-      novoAno -= 1
-    } else if (novoMes > 12) {
-      novoMes = 1
-      novoAno += 1
-    }
-    setMes(novoMes)
-    setAno(novoAno)
-  }
+  const carregando = loading || loadingAnterior
 
   return (
-    <div className="p-4">
-      <h1 className="mb-4 text-2xl font-semibold">Ranking</h1>
-
-      <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as 'mes' | 'ano')}>
-        <TabsList>
-          <TabsTrigger value="mes">Mês</TabsTrigger>
-          <TabsTrigger value="ano">Acumulado do ano</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {periodo === 'mes' && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => mudarMes(-1)} aria-label="Mês anterior">
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="w-40 text-center font-medium">
-            {MESES[mes - 1]} de {ano}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => mudarMes(1)} aria-label="Próximo mês">
-            <ChevronRight className="size-4" />
-          </Button>
+    <div className="mx-auto max-w-4xl p-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-[28px] font-semibold tracking-tight sm:text-[32px]">
+            Ranking de Pontuação
+          </h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
+            Acompanhe sua posição e evolução no programa de premiações.
+          </p>
         </div>
-      )}
-      {periodo === 'ano' && (
-        <p className="mt-4 text-center font-medium text-muted-foreground">Ano de {ano}</p>
-      )}
 
-      {error && <p className="mt-4 text-center text-sm text-destructive">{error}</p>}
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as 'mes' | 'ano')}>
+            <TabsList>
+              <TabsTrigger value="mes">Mês</TabsTrigger>
+              <TabsTrigger value="ano">Ano</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-      {loading ? (
-        <div className="mt-6 flex flex-col gap-2">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
+          <div className="flex items-center gap-1">
+            {periodo === 'mes' && (
+              <Select value={String(mes)} onValueChange={(v) => v && setMes(Number(v))}>
+                <SelectTrigger size="sm" className="w-[120px]">
+                  <SelectValue>{MESES[mes - 1]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {MESES.map((nome, idx) => (
+                    <SelectItem key={nome} value={String(idx + 1)}>
+                      {nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setAno(ano - 1)} aria-label="Ano anterior">
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="w-10 text-center text-sm tabular-nums">{ano}</span>
+            <Button variant="ghost" size="icon" onClick={() => setAno(ano + 1)} aria-label="Próximo ano">
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+
+      {carregando ? (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : (
-        <>
-          <Podio top3={top3} onSelect={setSelecionada} />
-          <div className="mt-4 flex flex-col gap-2">
-            {resto.map((linha, i) => (
-              <button
-                key={linha.vendedora_id}
-                type="button"
-                onClick={() => setSelecionada(linha)}
-                className="flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-6 text-center text-sm font-medium text-muted-foreground">
-                    {i + 4}º
-                  </span>
-                  <span
-                    className={
-                      linha.vendedora_id === profile?.vendedora_id ? 'font-semibold' : undefined
-                    }
-                  >
-                    {linha.nome}
-                  </span>
-                </div>
-                <span className="font-semibold text-brand-600 dark:text-brand-400">
-                  {linha.pontos_total} pts
-                </span>
-              </button>
-            ))}
-            {linhas.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Ninguém pontuou neste período ainda.
-              </p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${periodo}-${ano}-${mes}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="flex flex-col gap-4"
+          >
+            <SummaryCards
+              linhas={linhas}
+              meuVendedoraId={meuVendedoraId}
+              periodo={periodo}
+              totalParticipantes={linhas.length}
+            />
+
+            <Podio top3={top3} onSelect={setSelecionada} />
+
+            <RankingTable linhas={linhas} meuVendedoraId={meuVendedoraId} onSelect={setSelecionada} />
+
+            {(meuVendedoraId || mostrarComparacao) && (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {meuVendedoraId && (
+                  <EvolutionChart vendedoraId={meuVendedoraId} ano={ano} mesAtual={mes} />
+                )}
+                {mostrarComparacao && minha && lider && (
+                  <ComparisonBar minha={minha} lider={lider} />
+                )}
+              </div>
             )}
-          </div>
-        </>
+
+            <Insights linhas={linhas} meuVendedoraId={meuVendedoraId} periodo={periodo} />
+          </motion.div>
+        </AnimatePresence>
       )}
 
       <ExtratoDialog
