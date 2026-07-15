@@ -13,6 +13,8 @@ import GestorMetas from '@/pages/gestor/Metas'
 import GestorRegistros from '@/pages/gestor/Registros'
 import GestorRelatorios from '@/pages/gestor/Relatorios'
 import RankingPage from '@/pages/Ranking'
+import VisualizadorLayout from '@/pages/visualizador/VisualizadorLayout'
+import Pontuacao from '@/pages/Pontuacao'
 
 function IndexRedirect() {
   const { profile } = useAuth()
@@ -77,11 +79,14 @@ export default function App() {
         element={
           <ProtectedRoute roles={['visualizador']}>
             <AppShell>
-              <RankingPage />
+              <VisualizadorLayout />
             </AppShell>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<RankingPage />} />
+        <Route path="pontuacao" element={<Pontuacao />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
