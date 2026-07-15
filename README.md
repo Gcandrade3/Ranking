@@ -69,13 +69,13 @@ cadastrado no Auth precisa ser exatamente o da tabela abaixo.
 
 1. Em **Authentication → Users** do dashboard Supabase, crie um usuário para
    cada uma, marcando **Auto Confirm User** (senão o login falha por e-mail
-   não confirmado):
+   não confirmado) e definindo a senha combinada com a equipe:
 
-   | Nome     | E-mail (cadastrar assim, sem alterar) | Senha         |
-   |----------|----------------------------------------|---------------|
-   | Cris     | `cris@reconluz.local`                   | `reconluz2026` |
-   | Gabriela | `gabriela@reconluz.local`                | `reconluz2026` |
-   | Rafaela  | `rafaela@reconluz.local`                 | `reconluz2026` |
+   | Nome     | E-mail (cadastrar assim, sem alterar) |
+   |----------|----------------------------------------|
+   | Cris     | `cris@reconluz.local`                   |
+   | Gabriela | `gabriela@reconluz.local`                |
+   | Rafaela  | `rafaela@reconluz.local`                 |
 
 2. No **SQL Editor**, rode para as 3 (o trigger `handle_new_user` já criou a
    linha em `profiles` com papel padrão `'vendedora'` — este update promove
@@ -90,7 +90,7 @@ cadastrado no Auth precisa ser exatamente o da tabela abaixo.
    ```
 
 3. Pronto — na tela de login, cada uma digita só o próprio nome (ex.: `Cris`)
-   e a senha `reconluz2026`.
+   e a senha definida no passo 1.
 
 Se um dia quiser adicionar mais um perfil desse tipo, repita os passos acima
 e adicione o par nome/e-mail em `ALIASES` dentro de
