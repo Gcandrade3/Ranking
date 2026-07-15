@@ -59,6 +59,43 @@ de criar as contas Auth correspondentes: o vínculo entre login e vendedora é
 automático por e-mail (funciona em qualquer ordem — cadastro na Auth antes ou
 depois de editar o e-mail na tabela `vendedoras`).
 
+### Criando os perfis de visualizador (Cris, Gabriela, Rafaela)
+
+Essas 3 contas só enxergam a tela de Ranking (rota `/ranking`), sem dashboard
+pessoal e sem nenhuma permissão de escrita. O login delas é feito só pelo
+**nome** (não pelo e-mail) — a tela de login traduz o nome para um e-mail
+sintético internamente (ver `src/lib/loginAliases.ts`), então o e-mail
+cadastrado no Auth precisa ser exatamente o da tabela abaixo.
+
+1. Em **Authentication → Users** do dashboard Supabase, crie um usuário para
+   cada uma, marcando **Auto Confirm User** (senão o login falha por e-mail
+   não confirmado):
+
+   | Nome     | E-mail (cadastrar assim, sem alterar) | Senha         |
+   |----------|----------------------------------------|---------------|
+   | Cris     | `cris@reconluz.local`                   | `reconluz2026` |
+   | Gabriela | `gabriela@reconluz.local`                | `reconluz2026` |
+   | Rafaela  | `rafaela@reconluz.local`                 | `reconluz2026` |
+
+2. No **SQL Editor**, rode para as 3 (o trigger `handle_new_user` já criou a
+   linha em `profiles` com papel padrão `'vendedora'` — este update promove
+   para o papel restrito e preenche o nome de exibição):
+   ```sql
+   update public.profiles set papel = 'visualizador', nome = 'Cris'
+     where id = (select id from auth.users where email = 'cris@reconluz.local');
+   update public.profiles set papel = 'visualizador', nome = 'Gabriela'
+     where id = (select id from auth.users where email = 'gabriela@reconluz.local');
+   update public.profiles set papel = 'visualizador', nome = 'Rafaela'
+     where id = (select id from auth.users where email = 'rafaela@reconluz.local');
+   ```
+
+3. Pronto — na tela de login, cada uma digita só o próprio nome (ex.: `Cris`)
+   e a senha `reconluz2026`.
+
+Se um dia quiser adicionar mais um perfil desse tipo, repita os passos acima
+e adicione o par nome/e-mail em `ALIASES` dentro de
+`src/lib/loginAliases.ts`.
+
 ## Deploy na Vercel
 
 1. Suba este repositório para o GitHub (se ainda não estiver lá).

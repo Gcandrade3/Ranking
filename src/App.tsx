@@ -16,7 +16,13 @@ import RankingPage from '@/pages/Ranking'
 
 function IndexRedirect() {
   const { profile } = useAuth()
-  return <Navigate to={profile?.papel === 'gestor' ? '/admin' : '/app'} replace />
+  const destino =
+    profile?.papel === 'gestor'
+      ? '/admin'
+      : profile?.papel === 'visualizador'
+        ? '/ranking'
+        : '/app'
+  return <Navigate to={destino} replace />
 }
 
 export default function App() {
@@ -65,6 +71,17 @@ export default function App() {
         <Route path="ranking" element={<RankingPage />} />
         <Route path="relatorios" element={<GestorRelatorios />} />
       </Route>
+
+      <Route
+        path="/ranking"
+        element={
+          <ProtectedRoute roles={['visualizador']}>
+            <AppShell>
+              <RankingPage />
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -5,7 +5,7 @@
 // Usamos `type` (não `interface`) porque interfaces não satisfazem o construtor
 // `Record<string, unknown>` que o supabase-js exige internamente para cada tabela.
 
-export type Papel = 'gestor' | 'vendedora'
+export type Papel = 'gestor' | 'vendedora' | 'visualizador'
 export type StatusRegistro = 'pendente' | 'validado' | 'rejeitado'
 
 export type Vendedora = {

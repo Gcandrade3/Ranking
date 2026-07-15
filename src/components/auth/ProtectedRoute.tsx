@@ -21,7 +21,12 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   if (!session) return <Navigate to="/login" replace />
 
   if (roles && (!profile || !roles.includes(profile.papel))) {
-    const fallback = profile?.papel === 'gestor' ? '/admin' : '/app'
+    const fallback =
+      profile?.papel === 'gestor'
+        ? '/admin'
+        : profile?.papel === 'visualizador'
+          ? '/ranking'
+          : '/app'
     return <Navigate to={fallback} replace />
   }
 

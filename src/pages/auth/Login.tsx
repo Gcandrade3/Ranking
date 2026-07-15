@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/lib/theme'
+import { resolverEmailDeLogin } from '@/lib/loginAliases'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,9 +23,15 @@ export default function Login() {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
-    const { error } = await signIn(email, password)
+    const emailResolvido = resolverEmailDeLogin(email)
+    if (!emailResolvido) {
+      setSubmitting(false)
+      setError('Usuário ou senha inválidos.')
+      return
+    }
+    const { error } = await signIn(emailResolvido, password)
     setSubmitting(false)
-    if (error) setError('E-mail ou senha inválidos.')
+    if (error) setError('Usuário ou senha inválidos.')
   }
 
   return (
@@ -49,11 +56,11 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">Usuário ou e-mail</Label>
               <Input
                 id="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
