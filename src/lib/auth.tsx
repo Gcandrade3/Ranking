@@ -20,6 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true
+    // Rastreado fora do estado React: só precisamos saber se o usuário logado
+    // mudou entre um evento de auth e o próximo, não precisamos re-renderizar
+    // por causa dele.
+    let currentUserId: string | null = null
 
     async function loadProfile(userId: string) {
       const { data, error } = await supabase
@@ -39,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return
       setSession(data.session)
+      currentUserId = data.session?.user.id ?? null
       if (data.session) await loadProfile(data.session.user.id)
       setLoading(false)
     })
@@ -46,11 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: subscription } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         if (!active) return
+        setSession(newSession)
+
+        // O Supabase dispara este evento também para renovação silenciosa de
+        // token (ex.: toda vez que a aba volta a ficar visível) — sem isso, a
+        // tela inteira piscava para "Carregando…" a cada volta ao navegador,
+        // mesmo com o mesmo usuário já logado. Só refazemos o carregamento do
+        // profile quando o usuário logado de fato muda (login/logout/troca de conta).
+        const newUserId = newSession?.user.id ?? null
+        if (newUserId === currentUserId) return
+        currentUserId = newUserId
+
         // loading volta a true até o profile carregar junto — senão há uma
         // janela em que session já está setada mas profile ainda é o valor
         // antigo (null), e telas que decidem rota por profile.papel agem cedo demais.
         setLoading(true)
-        setSession(newSession)
         if (newSession) {
           await loadProfile(newSession.user.id)
         } else {

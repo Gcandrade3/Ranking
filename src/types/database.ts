@@ -93,6 +93,17 @@ export type RankingAnual = {
   pontos_total: number
 }
 
+export type ExtratoPonto = {
+  id: string
+  vendedora_id: string
+  ano: number
+  mes: number
+  data_ocorrencia: string | null
+  descricao: string
+  categoria: string
+  pontos: number
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -136,6 +147,7 @@ export type Database = {
     Views: {
       ranking_mensal: { Row: RankingMensal; Relationships: [] }
       ranking_anual: { Row: RankingAnual; Relationships: [] }
+      extrato_pontos: { Row: ExtratoPonto; Relationships: [] }
     }
     Functions: Record<string, never>
     Enums: Record<string, never>

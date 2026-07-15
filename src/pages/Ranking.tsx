@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRanking } from '@/hooks/useRanking'
+import { useRanking, type RankingLinha } from '@/hooks/useRanking'
 import { Podio } from '@/components/ranking/Podio'
+import { ExtratoDialog } from '@/components/ranking/ExtratoDialog'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -29,6 +30,7 @@ export default function RankingPage() {
   const [periodo, setPeriodo] = useState<'mes' | 'ano'>('mes')
   const { profile } = useAuth()
   const { mensal, anual, loading, error } = useRanking(ano, mes)
+  const [selecionada, setSelecionada] = useState<RankingLinha | null>(null)
 
   const linhas = periodo === 'mes' ? mensal : anual
   const top3 = linhas.slice(0, 3)
@@ -86,12 +88,14 @@ export default function RankingPage() {
         </div>
       ) : (
         <>
-          <Podio top3={top3} />
+          <Podio top3={top3} onSelect={setSelecionada} />
           <div className="mt-4 flex flex-col gap-2">
             {resto.map((linha, i) => (
-              <div
+              <button
                 key={linha.vendedora_id}
-                className="flex items-center justify-between rounded-lg border px-4 py-3"
+                type="button"
+                onClick={() => setSelecionada(linha)}
+                className="flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:bg-muted/50"
               >
                 <div className="flex items-center gap-3">
                   <span className="w-6 text-center text-sm font-medium text-muted-foreground">
@@ -108,7 +112,7 @@ export default function RankingPage() {
                 <span className="font-semibold text-brand-600 dark:text-brand-400">
                   {linha.pontos_total} pts
                 </span>
-              </div>
+              </button>
             ))}
             {linhas.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">
@@ -118,6 +122,15 @@ export default function RankingPage() {
           </div>
         </>
       )}
+
+      <ExtratoDialog
+        linha={selecionada}
+        ano={ano}
+        mes={periodo === 'mes' ? mes : null}
+        onOpenChange={(open) => {
+          if (!open) setSelecionada(null)
+        }}
+      />
     </div>
   )
 }

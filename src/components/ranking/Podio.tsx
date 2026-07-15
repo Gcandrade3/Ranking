@@ -17,7 +17,13 @@ function iniciais(nome: string) {
     .toUpperCase()
 }
 
-export function Podio({ top3 }: { top3: RankingLinha[] }) {
+export function Podio({
+  top3,
+  onSelect,
+}: {
+  top3: RankingLinha[]
+  onSelect?: (linha: RankingLinha) => void
+}) {
   if (top3.length === 0) return null
 
   return (
@@ -25,7 +31,15 @@ export function Podio({ top3 }: { top3: RankingLinha[] }) {
       {top3.map((linha, i) => {
         const style = medalStyles[i]
         return (
-          <div key={linha.vendedora_id} className={cn('flex flex-1 flex-col items-center', style.order)}>
+          <button
+            key={linha.vendedora_id}
+            type="button"
+            onClick={() => onSelect?.(linha)}
+            className={cn(
+              'flex flex-1 flex-col items-center rounded-lg transition-opacity hover:opacity-80',
+              style.order,
+            )}
+          >
             {i === 0 && <Crown className="mb-1 size-5 text-brand-500" />}
             <div
               className={cn(
@@ -46,7 +60,7 @@ export function Podio({ top3 }: { top3: RankingLinha[] }) {
             >
               {i + 1}º
             </div>
-          </div>
+          </button>
         )
       })}
     </div>
